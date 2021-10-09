@@ -35,7 +35,7 @@ class NewWindow extends JDialog {
     
     private void init() {
         setResizable(false);
-        setIconImage(new ImageIcon(NewWindow.class.getResource("/icon.png")).getImage());
+//        setIconImage(new ImageIcon(NewWindow.class.getResource("/icon.png")).getImage());
         setLayout(null);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);

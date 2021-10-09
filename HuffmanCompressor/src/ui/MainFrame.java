@@ -24,7 +24,7 @@ public class MainFrame extends JFrame {
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setResizable(false);
         setTitle("Huff Compressor");
-        setIconImage(new ImageIcon(MainFrame.class.getResource("/icon.png")).getImage());
+//        setIconImage(new ImageIcon(MainFrame.class.getResource("/icon.png")).getImage());
         setLayout(null);
         setLocationRelativeTo(null);
         addWindowListener(new WindowAdapter() {

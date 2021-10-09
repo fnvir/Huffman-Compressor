@@ -54,6 +54,19 @@ public class BinaryReader {
         return bt;
     }
     
+    public long readNbitsLong(int N) throws IOException {
+        if(N<0||N>64) throw new IllegalArgumentException("0<N<=64");
+        long bt;
+        int x=N-8;
+        if(x>0) {
+            bt=((long)readNbits(8))<<x;
+            bt|=readNbitsLong(x);
+        } else {
+            bt=readNbits(N);
+        }
+        return bt;
+    }
+    
     public int readByte() throws IOException {
         return len==0?read():readNbits(8);
     }
@@ -67,5 +80,6 @@ public class BinaryReader {
         flush();
         in.close();
     }
+
     
 }

@@ -6,9 +6,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-
-import com.sun.tools.javac.Main;
-
 import huffman.AbstractCompressor;
 import huffman.Compressor;
 import huffman.Decompressor;
@@ -27,7 +24,7 @@ public class MainFrame extends JFrame {
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setResizable(false);
         setTitle("Huff Compressor");
-        setIconImage(new ImageIcon("icon.png").getImage());
+        setIconImage(new ImageIcon(MainFrame.class.getResource("/icon.png")).getImage());
         setLayout(null);
         setLocationRelativeTo(null);
         addWindowListener(new WindowAdapter() {

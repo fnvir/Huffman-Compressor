@@ -3,7 +3,6 @@ package ui;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
-import javax.swing.ImageIcon;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -75,7 +74,7 @@ class TopMenu implements ActionListener {
                 +"Click on the \"Compress\" button to begin compression\n"
                 +"The File will be saved  with a .huff extension added\n\n"
                 +"Follow similar steps for decompression too\n\n";
-        JOptionPane.showMessageDialog(null,s,"Tutorial",JOptionPane.PLAIN_MESSAGE,new ImageIcon("qmark.png"));
+        JOptionPane.showMessageDialog(null,s,"Tutorial",JOptionPane.INFORMATION_MESSAGE);
     }
     
     private void showInfo() {

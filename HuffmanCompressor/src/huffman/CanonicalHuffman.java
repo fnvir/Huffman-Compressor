@@ -1,6 +1,5 @@
 package huffman;
 
-import java.util.Arrays;
 import util.BitString;
 
 class CanonicalHuffman {
@@ -20,24 +19,21 @@ class CanonicalHuffman {
     private Long canon[]; //stores the canonical code if the max codelen<=64
     private String canonStr[]; //stores the canonical codes as string
     private Entry entries[]; //Array of all bytes in the File with their Huffman code length
-    private int maxlen; //as the name says
+
     
-    public CanonicalHuffman(int[] codelen) {
-        int size=0; //length of unique bytes in the file
-        for(int i:codelen) {
-            if(i>0) size++;
-            maxlen=Math.max(i,maxlen);
-        }
+    //size - number of unique bytes in the file
+    // asBitString - to generate canonical codes as String
+    public CanonicalHuffman(int[] codelen,int size,boolean asBitString) {
         entries=new Entry[size];
         for(int bt=0,i=0;bt<256;bt++)
             if(codelen[bt]>0)
                 entries[i++]=new Entry(bt,codelen[bt]);
-        Arrays.sort(entries);
-        canonize();
+        java.util.Arrays.sort(entries);
+        canonize(asBitString);
     }
     
-    private void canonize() {
-        if(maxlen>64) canonizeString();
+    private void canonize(boolean asStr) {
+        if(asStr) canonizeString();
         else canonizeLong();
     }
     
@@ -60,10 +56,6 @@ class CanonicalHuffman {
             pre.addOne().__leftShift__(x-y);
             canonStr[entries[i].b]=pre.toNbitString(x);
         }
-    }
-
-    public int getMaxLen() {
-        return maxlen;
     }
     
     public Long[] getCanonicalLong() {

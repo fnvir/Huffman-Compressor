@@ -42,37 +42,50 @@ public class Decompressor extends AbstractCompressor {
         readConfig(br); //10%
 //        setProgress(10);
         firePropertyChange("progress",0,10);
-        Node tree=regenerateTree(); //30%
-//        setProgress(40);
-        firePropertyChange("progress",10,40);
-        beginDecompression(br,tree); //59%
-//        setProgress(97);
-        firePropertyChange("progress",40,96);
-        freememory(tree);
+        if(distinctBytes==1) {
+            decompress1Distinct();
+        } else {
+            Node tree=regenerateTree(); //30%
+//            setProgress(40);
+            firePropertyChange("progress",10,40);
+            decompress0(br,tree); //59%
+//            setProgress(97);
+            firePropertyChange("progress",40,96);
+            freememory(tree);
+        }
         br.close();
 //        setProgress(100);
         firePropertyChange("progress",96,100);
     }
     
     private void readConfig(BinaryReader br) throws IOException {
-        int minInx=br.readByte();
-        int maxInx=br.readByte();
+        minInx=br.readByte();
+        maxInx=br.readByte();
         int bitsNeeded=br.readByte();
-        for(int i=minInx;i<maxInx+1;i++) {
-            codelen[i]=br.readNbits(bitsNeeded);
+        if(minInx==maxInx) distinctBytes=1;
+        if(distinctBytes==1) {
+            outputLen=br.readNbitsLong(bitsNeeded);
+        } else {
+            for(int i=minInx;i<maxInx+1;i++) {
+                codelen[i]=br.readNbits(bitsNeeded);
+                if(codelen[i]>0) {
+                    distinctBytes++;
+                    maxLen=Math.max(maxLen,codelen[i]);
+                }
+            }
+            br.flush();
+            br.readNbits(br.readNbits(3));  //discard the extra bits
         }
-        br.flush();
-        br.readNbits(br.readNbits(3));  //discard the extra bits
     }
     
     private Node regenerateTree() {
-        CanonicalHuffman c=new CanonicalHuffman(codelen);
+        CanonicalHuffman c=new CanonicalHuffman(codelen,distinctBytes,maxLen>64);
         Long canon[]=c.getCanonicalLong();
         String canonStr[]=c.getCanonicalString();
         Node tree=new Node();
         for(int i=0;i<codelen.length;i++) {
             if(codelen[i]>0) {
-                if(c.getMaxLen()<=64)
+                if(maxLen<=64)
                     addNode(tree,i,codelen[i],canon[i]);
                 else
                     addNode(tree,i,0,canonStr[i]);
@@ -109,7 +122,14 @@ public class Decompressor extends AbstractCompressor {
         }
     }
     
-    private void beginDecompression(BinaryReader br, Node tree) throws IOException {
+    private void decompress1Distinct() throws IOException {
+        BinaryWriter bw=new BinaryWriter(outputFile);
+        for(int i=0;i<getOutputFileLength();i++)
+            bw.writeByte(minInx);
+        bw.close();
+    }
+    
+    private void decompress0(BinaryReader br, Node tree) throws IOException {
         Node curr=tree;
         int b;
         BinaryWriter bw=new BinaryWriter(outputFile);

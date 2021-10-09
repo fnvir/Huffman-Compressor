@@ -8,6 +8,8 @@ public abstract class AbstractCompressor extends SwingWorker<Boolean,Integer> {
     protected File inputFile,outputFile;
     protected Long inputLen,outputLen;
     protected int[] codelen;
+    protected int minInx=300,maxInx=-1,distinctBytes;
+    protected long maxLen;
     
     
     public abstract void setOutputDir(String outDir);

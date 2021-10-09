@@ -44,18 +44,22 @@ public class Compressor extends AbstractCompressor {
     
     public void compress() throws IOException {
         BinaryWriter bw=new BinaryWriter(outputFile);
-        initialize(); //40%
-        setProgress(40);
-        writeConfig(bw); //5%
-        setProgress(45);
-        compress0(bw); //55%
+        calcFreq(); //+6%
+        setProgress(6);
+        if(distinctBytes==1) {
+            writeConfig(bw);
+        } else {
+            initialize(); //40%
+            setProgress(40);
+            writeConfig(bw); //5%
+            setProgress(45);
+            compress0(bw); //55%
+        }
         setProgress(100);
         bw.close();
     }
     
     private void initialize() throws IOException {
-        calcFreq(); //+6%
-        setProgress(6);
         Node tree=generateTree(); //+8% 
         setProgress(14);
         generateCodes(tree,""); //+25%
@@ -70,6 +74,13 @@ public class Compressor extends AbstractCompressor {
             catch(EOFException e) {break;}
         }
         br.close();
+        for(int i=0;i<256;i++) {
+            if(freq[i]>0) {
+                distinctBytes++;
+                if(i<minInx) minInx=i;
+                if(i>maxInx) maxInx=i;
+            }
+        }
     }
     
     private Node generateTree() {
@@ -86,6 +97,7 @@ public class Compressor extends AbstractCompressor {
         if(root.b!=null) {
             codes[root.b]=s;
             codelen[root.b]=s.length();
+            maxLen=Math.max(maxLen,s.length());
         }
         if(root.left!=null)
             generateCodes(root.left,s+"0");
@@ -94,27 +106,20 @@ public class Compressor extends AbstractCompressor {
     }
     
     private void writeConfig(BinaryWriter bw) throws IOException {
-        int info[]=getInfos();
-        for(int i:info)
-            bw.writeByte(i);
-        for(int i=info[0];i<info[1]+1;i++) {
-            bw.writeNbits(info[2],codelen[i]);
-        }
-        bw.flush();
-        writeExtras(bw);
-    }
-    
-    private int[] getInfos() {
-        int minInx=256,maxInx=-1,maxLen=0;
-        for(int i=0;i<codelen.length;i++) {
-            if(codelen[i]>0) {
-                if(minInx==256) minInx=i;
-                if(i>maxInx) maxInx=i;
-                maxLen=Math.max(maxLen,codelen[i]);
+        if(distinctBytes==1) maxLen=getInputFileLength();
+        int bitsNeeded=64-Long.numberOfLeadingZeros(maxLen);
+        bw.writeByte(minInx);
+        bw.writeByte(maxInx);
+        bw.writeByte(bitsNeeded);
+        if(distinctBytes==1) {
+            bw.writeNbits(bitsNeeded,getInputFileLength());
+        } else {
+            for(int i=minInx;i<maxInx+1;i++) {
+                bw.writeNbits(bitsNeeded,codelen[i]);
             }
+            bw.flush();
+            writeExtras(bw);
         }
-        int bitsNeeded=32-Integer.numberOfLeadingZeros(maxLen);
-        return new int[] {minInx,maxInx,bitsNeeded};
     }
     
     private void writeExtras(BinaryWriter bw) throws IOException {
@@ -127,11 +132,11 @@ public class Compressor extends AbstractCompressor {
     }
     
     private void compress0(BinaryWriter bw) throws IOException {
-        CanonicalHuffman c=new CanonicalHuffman(codelen);
+        CanonicalHuffman c=new CanonicalHuffman(codelen,distinctBytes,maxLen>64);
         Long canon[]=c.getCanonicalLong();
         String canonStr[]=c.getCanonicalString();
         BinaryReader br=new BinaryReader(inputFile);
-        if(c.getMaxLen()<=64)
+        if(maxLen<=64)
             writeCanonical(br,bw,canon);
         else
             writeCanonicalStr(br,bw,canonStr);

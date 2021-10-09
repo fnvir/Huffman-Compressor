@@ -54,6 +54,7 @@ public class BinaryReader {
         return bt;
     }
     
+    //reads N bits (N<=64) from the file
     public long readNbitsLong(int N) throws IOException {
         if(N<0||N>64) throw new IllegalArgumentException("0<N<=64");
         long bt;
